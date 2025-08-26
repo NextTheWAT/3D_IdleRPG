@@ -49,16 +49,9 @@ public class CarAI : MonoBehaviour
     [SerializeField] private float waypointGizmoRadius;
     [SerializeField] private float trackNodeGizmoRadius;
 
-
-    [Header("Steering")] 
-    private float steerSmoothVel = 0f;
-    [SerializeField] float steerResponse = 0.15f;   // 클수록 빠르게 조향
-    [SerializeField] float steerSlowStart = 5f;     // 감속 시작 각도
-    [SerializeField] float steerSlowEnd = 35f;    // 최대 감속 각도
-    [SerializeField] int minCornerRPM = 80;     // 코너 최소 목표RPM
-
     [HideInInspector] public bool move;
 
+    private Rigidbody rb;  // ← 추가
     private Vector3 PostionToFollow = Vector3.zero;
     private int currentWayPoint;
     private float AIFOV = 60;
@@ -69,6 +62,9 @@ public class CarAI : MonoBehaviour
     private int Fails;
     private float MovementTorque = 1;
 
+    public float CurrentSpeedKmh => rb ? rb.velocity.magnitude * 3.6f : 0f;
+
+
     void Awake()
     {
         currentWayPoint = 0;
@@ -78,11 +74,13 @@ public class CarAI : MonoBehaviour
 
     void Start()
     {
+        rb = GetComponent<Rigidbody>();
         GetComponent<Rigidbody>().centerOfMass = Vector3.zero;
         CalculateNavMashLayerBite();
         waypointGizmoRadius = nodeReachDistance;    //실제 크기와 기즈모가 같게 수정
         trackNodeGizmoRadius = nodeReachDistance;   //실제 크기와 기즈모가 같게 수정
     }
+
 
     void FixedUpdate()
     {
@@ -360,38 +358,36 @@ public class CarAI : MonoBehaviour
     {
         allowMovement = (move && allowMovement);
 
-        if (!allowMovement) { ApplyBrakes(); return; }
-
-        frontLeft.brakeTorque = frontRight.brakeTorque = 0;
-        backLeft.brakeTorque = backRight.brakeTorque = 0;
-
-        int wheelRPM = (int)((frontLeft.rpm + frontRight.rpm + backLeft.rpm + backRight.rpm) / 4);
-
-        // 여유 마진
-        int margin = 10;
-        float torque = 400 * MovementTorque;
-
-        if (wheelRPM < LocalMaxSpeed - margin)
+        if (allowMovement)
         {
-            // 가속
-            backRight.motorTorque = backLeft.motorTorque = frontRight.motorTorque = frontLeft.motorTorque = torque;
-        }
-        else if (wheelRPM <= LocalMaxSpeed + margin)
-        {
-            // 코스팅
-            backRight.motorTorque = backLeft.motorTorque = frontRight.motorTorque = frontLeft.motorTorque = 0;
+            frontLeft.brakeTorque = 0;
+            frontRight.brakeTorque = 0;
+            backLeft.brakeTorque = 0;
+            backRight.brakeTorque = 0;
+
+            int SpeedOfWheels = (int)((frontLeft.rpm + frontRight.rpm + backLeft.rpm + backRight.rpm) / 4);
+
+            if (SpeedOfWheels < LocalMaxSpeed)
+            {
+                float torque = 400 * MovementTorque;
+                backRight.motorTorque = torque;
+                backLeft.motorTorque = torque;
+                frontRight.motorTorque = torque;
+                frontLeft.motorTorque = torque;
+            }
+            else if (SpeedOfWheels < LocalMaxSpeed + (LocalMaxSpeed * 1 / 4))
+            {
+                backRight.motorTorque = 0;
+                backLeft.motorTorque = 0;
+                frontRight.motorTorque = 0;
+                frontLeft.motorTorque = 0;
+            }
+            else
+                ApplyBrakes();
         }
         else
-        {
-            // 과속 → 브레이크 (곡률에 따라 강도 가중)
-            float curveT = Mathf.InverseLerp(steerSlowStart, steerSlowEnd, Mathf.Abs(frontLeft.steerAngle));
-            float brake = Mathf.Lerp(1500f, 4000f, curveT); // 필요하면 수치 조정
-            frontLeft.brakeTorque = frontRight.brakeTorque = backLeft.brakeTorque = backRight.brakeTorque = brake;
-
-            backRight.motorTorque = backLeft.motorTorque = frontRight.motorTorque = frontLeft.motorTorque = 0;
-        }
+            ApplyBrakes();
     }
-
 
     void debug(string text, bool IsCritical)
     {
