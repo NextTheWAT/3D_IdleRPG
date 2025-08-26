@@ -6,7 +6,7 @@ using UnityEngine.Events;
 /// 기본적인 체력 증감, 이벤트 알림, 사망 처리 등을 제공한다.
 /// IValueChangable 인터페이스를 구현해서, 외부에서 int 값 증감 요청을 통일된 방식으로 처리할 수 있게 한다.
 /// </summary>
-public abstract class BaseCondition : MonoBehaviour, IValueChangable
+public abstract class BaseCondition : MonoBehaviour
 {
     [Header("Health")]
     [SerializeField] protected float health = 100f;      // 현재 체력
@@ -63,17 +63,6 @@ public abstract class BaseCondition : MonoBehaviour, IValueChangable
     public virtual void AddHealth(float delta)
     {
         SetHealth(health + delta);
-    }
-
-    /// <summary>
-    /// IValueChangable 인터페이스 구현
-    /// 정수 값(amount)만큼 체력을 증감시키고, 변경 후 현재 체력 반환
-    /// </summary>
-    public virtual float ValueChanged(int amount)
-    {
-        // 인터페이스 구현 → 내부적으로 AddHealth를 재사용
-        AddHealth(amount);
-        return Health;
     }
 
 
