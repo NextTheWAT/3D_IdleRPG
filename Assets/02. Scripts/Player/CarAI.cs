@@ -30,10 +30,6 @@ public class CarAI : MonoBehaviour
     public bool ShowGizmos;
     public bool Debugger;
 
-    [Header("Destination Parameters")]
-    public bool Patrol = true;
-    public Transform CustomDestination;
-
     // -------- Track Mode (추가) --------
     [Header("Track Mode")]
     public bool useTrackNodes = true;              // 트랙 노드 사용 여부
@@ -48,6 +44,18 @@ public class CarAI : MonoBehaviour
     [Range(2, 64)] public int samplesPerSegment = 12; // 세그먼트당 생성 포인트 수
     public bool projectPointsToNavMesh = true;        // 포인트를 NavMesh에 스냅
     public float projectionMaxDistance = 2f;          // 스냅 탐색 반경
+
+    [Header("Debug Gizmo Settings")]
+    [SerializeField] private float waypointGizmoRadius;
+    [SerializeField] private float trackNodeGizmoRadius;
+
+
+    [Header("Steering")] 
+    private float steerSmoothVel = 0f;
+    [SerializeField] float steerResponse = 0.15f;   // 클수록 빠르게 조향
+    [SerializeField] float steerSlowStart = 5f;     // 감속 시작 각도
+    [SerializeField] float steerSlowEnd = 35f;    // 최대 감속 각도
+    [SerializeField] int minCornerRPM = 80;     // 코너 최소 목표RPM
 
     [HideInInspector] public bool move;
 
@@ -72,6 +80,8 @@ public class CarAI : MonoBehaviour
     {
         GetComponent<Rigidbody>().centerOfMass = Vector3.zero;
         CalculateNavMashLayerBite();
+        waypointGizmoRadius = nodeReachDistance;    //실제 크기와 기즈모가 같게 수정
+        trackNodeGizmoRadius = nodeReachDistance;   //실제 크기와 기즈모가 같게 수정
     }
 
     void FixedUpdate()
@@ -112,8 +122,13 @@ public class CarAI : MonoBehaviour
             {
                 PostionToFollow = waypoints[currentWayPoint];
                 allowMovement = true;
-                // ※ 도달 거리 상수(2) → 변수(nodeReachDistance)로 교체
-                if (Vector3.Distance(carFront.position, PostionToFollow) < nodeReachDistance)
+
+                // Y 무시하고 XZ 평면 거리만 사용
+                Vector3 a = carFront.position;
+                Vector3 b = PostionToFollow;
+                a.y = b.y = 0f;
+
+                if (Vector3.Distance(a, b) < nodeReachDistance)
                     currentWayPoint++;
             }
 
@@ -131,19 +146,6 @@ public class CarAI : MonoBehaviour
                 return;
             }
             // --------------------------------------
-
-            if (CustomDestination == null)
-            {
-                if (Patrol)
-                    RandomPath();
-                else
-                {
-                    debug("No custom destination assigned and Patrol is set to false", false);
-                    allowMovement = false;
-                }
-            }
-            else
-                CustomPath(CustomDestination);
         }
 
         void ListOptimizer()
@@ -358,36 +360,38 @@ public class CarAI : MonoBehaviour
     {
         allowMovement = (move && allowMovement);
 
-        if (allowMovement)
+        if (!allowMovement) { ApplyBrakes(); return; }
+
+        frontLeft.brakeTorque = frontRight.brakeTorque = 0;
+        backLeft.brakeTorque = backRight.brakeTorque = 0;
+
+        int wheelRPM = (int)((frontLeft.rpm + frontRight.rpm + backLeft.rpm + backRight.rpm) / 4);
+
+        // 여유 마진
+        int margin = 10;
+        float torque = 400 * MovementTorque;
+
+        if (wheelRPM < LocalMaxSpeed - margin)
         {
-            frontLeft.brakeTorque = 0;
-            frontRight.brakeTorque = 0;
-            backLeft.brakeTorque = 0;
-            backRight.brakeTorque = 0;
-
-            int SpeedOfWheels = (int)((frontLeft.rpm + frontRight.rpm + backLeft.rpm + backRight.rpm) / 4);
-
-            if (SpeedOfWheels < LocalMaxSpeed)
-            {
-                float torque = 400 * MovementTorque;
-                backRight.motorTorque = torque;
-                backLeft.motorTorque = torque;
-                frontRight.motorTorque = torque;
-                frontLeft.motorTorque = torque;
-            }
-            else if (SpeedOfWheels < LocalMaxSpeed + (LocalMaxSpeed * 1 / 4))
-            {
-                backRight.motorTorque = 0;
-                backLeft.motorTorque = 0;
-                frontRight.motorTorque = 0;
-                frontLeft.motorTorque = 0;
-            }
-            else
-                ApplyBrakes();
+            // 가속
+            backRight.motorTorque = backLeft.motorTorque = frontRight.motorTorque = frontLeft.motorTorque = torque;
+        }
+        else if (wheelRPM <= LocalMaxSpeed + margin)
+        {
+            // 코스팅
+            backRight.motorTorque = backLeft.motorTorque = frontRight.motorTorque = frontLeft.motorTorque = 0;
         }
         else
-            ApplyBrakes();
+        {
+            // 과속 → 브레이크 (곡률에 따라 강도 가중)
+            float curveT = Mathf.InverseLerp(steerSlowStart, steerSlowEnd, Mathf.Abs(frontLeft.steerAngle));
+            float brake = Mathf.Lerp(1500f, 4000f, curveT); // 필요하면 수치 조정
+            frontLeft.brakeTorque = frontRight.brakeTorque = backLeft.brakeTorque = backRight.brakeTorque = brake;
+
+            backRight.motorTorque = backLeft.motorTorque = frontRight.motorTorque = frontLeft.motorTorque = 0;
+        }
     }
+
 
     void debug(string text, bool IsCritical)
     {
@@ -404,7 +408,7 @@ public class CarAI : MonoBehaviour
             {
                 if (i == currentWayPoint) Gizmos.color = Color.blue;
                 else Gizmos.color = (i > currentWayPoint) ? Color.red : Color.green;
-                Gizmos.DrawWireSphere(waypoints[i], 2f);
+                Gizmos.DrawWireSphere(waypoints[i], waypointGizmoRadius);
             }
             CalculateFOV();
         }
@@ -417,7 +421,7 @@ public class CarAI : MonoBehaviour
             {
                 var a = trackNodes[i];
                 var b = (i == trackNodes.Count - 1) ? (loopTrack ? trackNodes[0] : null) : trackNodes[i + 1];
-                if (a != null) Gizmos.DrawWireSphere(a.position, 0.5f);
+                if (a != null) Gizmos.DrawWireSphere(a.position, trackNodeGizmoRadius);
                 if (a != null && b != null) Gizmos.DrawLine(a.position, b.position);
             }
         }

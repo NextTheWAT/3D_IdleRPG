@@ -8,10 +8,6 @@ public class controllingCarAI : MonoBehaviour
     
     void variables()
     {
-        //1- Patrol = true 
-        carAI.Patrol = true;
-        // Patrol = false
-        carAI.Patrol = false;
 
         //2- Set the maximum steering angle
         carAI.MaxSteeringAngle = 45;
