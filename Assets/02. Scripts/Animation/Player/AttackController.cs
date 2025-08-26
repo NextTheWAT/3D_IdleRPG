@@ -9,7 +9,7 @@ public partial class AttackController : MonoBehaviour
 
     private void Awake()
     {
-        if (!animator) animator = GetComponentInChildren<Animator>();
+        if (!animator) animator = GetComponent<Animator>();
     }
 
     /// <summary>
