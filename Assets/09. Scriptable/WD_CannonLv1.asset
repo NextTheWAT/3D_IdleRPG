@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8235412c0152b148971a5126b770855, type: 3}
+  m_Name: WD_CannonLv1
+  m_EditorClassIdentifier: 
+  weaponId: 0
+  displayName: CannnonLv1
+  icon: {fileID: 21300000, guid: 9b60aebe01c841048a96da2f3bbf23fa, type: 3}
+  weaponPrefab: {fileID: 2281880729598235363, guid: 49f0c4e25ca63a04c807297e337771dc, type: 3}
+  damage: 10
+  range: 20
+  fireCooldown: 0.4
+  projectileSpeed: 100
+  maxFirePoints: 1
+  maxLevelPerTier: 5
+  nextTier: {fileID: 11400000, guid: add778b579fc39f4bbbed292b9158dcf, type: 2}
+  upgradeVfxPrefab: {fileID: 8895539338366349026, guid: 82a13a6dd6315dd48ae156fbd79da9b9, type: 3}
