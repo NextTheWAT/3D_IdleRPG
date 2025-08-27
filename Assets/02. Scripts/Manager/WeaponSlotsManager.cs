@@ -11,7 +11,7 @@ public class WeaponSlot
     public int level = 1;
 }
 
-public class WeaponSlotsManager : MonoBehaviour
+public class WeaponSlotsManager : Singleton<WeaponSlotsManager>
 {
     [Tooltip("Cannon1/2/3 순서대로 3개")]
     public WeaponSlot[] slots = new WeaponSlot[3];
@@ -33,9 +33,6 @@ public class WeaponSlotsManager : MonoBehaviour
         {
             var s = slots[i];
             if (s == null || s.data == null || s.mount == null) continue;
-
-            // 이미 인스턴스가 있으면 스킵
-            if (s.weaponInstance != null) continue;
 
             // 데이터의 프리팹으로 생성
             SpawnAtMount(s);

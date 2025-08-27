@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-public class CurrencyManager : MonoBehaviour
+public class CurrencyManager : Singleton<CurrencyManager>
 {
     public static CurrencyManager Instance { get; private set; }
 
@@ -10,8 +10,6 @@ public class CurrencyManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance && Instance != this) { Destroy(gameObject); return; }
-        Instance = this;
         goldUI.UpdateGoldUI(gold);
     }
 
