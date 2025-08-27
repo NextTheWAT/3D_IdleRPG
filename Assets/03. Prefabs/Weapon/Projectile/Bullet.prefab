@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 8669461678942508883}
   - component: {fileID: 568914191685506991}
   m_Layer: 9
-  m_Name: Sphere
+  m_Name: Bullet
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -65,7 +65,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: c60e59491e8bb5f448f960f8efc2d590, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -116,7 +116,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5604022523568923903}
   serializedVersion: 4
-  m_Mass: 10
+  m_Mass: 1
   m_Drag: 0
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -147,11 +147,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b02b9d5a2ce7d24f93583e98e3770f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  impactVfxPrefab: {fileID: 8895539338366349026, guid: 82a13a6dd6315dd48ae156fbd79da9b9, type: 3}
+  impactVfxPrefab: {fileID: 1000013462590818, guid: 8261e319b6376484da8b5a5e90a15241, type: 3}
   fallbackVfxLifetime: 2
   ignoreLayers:
     serializedVersion: 2
     m_Bits: 896
+  detachTrailOnHit: 1
+  trailLifetimeAfterHit: 0.3
 --- !u!96 &568914191685506991
 TrailRenderer:
   serializedVersion: 3

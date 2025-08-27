@@ -13,6 +13,9 @@ public abstract class BaseCondition : MonoBehaviour
     [SerializeField] protected float minHealth = 0f;     // 최소 체력 (보통 0)
     [SerializeField] protected float maxHealth = 100f;   // 최대 체력
 
+    public float GetHealth() => health;
+    public float GetMaxHealth() => maxHealth;
+
     [Header("Events")]
     // 체력 변화 시 호출되는 이벤트: (현재 체력 값, 정규화된 체력 0~1)
     public UnityEvent<float, float> onHealthChanged;

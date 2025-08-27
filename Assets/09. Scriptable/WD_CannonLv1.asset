@@ -19,8 +19,9 @@ MonoBehaviour:
   damage: 10
   range: 20
   fireCooldown: 0.4
-  projectileSpeed: 100
+  projectileSpeed: 50
   maxFirePoints: 1
   maxLevelPerTier: 5
   nextTier: {fileID: 11400000, guid: add778b579fc39f4bbbed292b9158dcf, type: 2}
+  damagePerLevel: 1
   upgradeVfxPrefab: {fileID: 8895539338366349026, guid: 82a13a6dd6315dd48ae156fbd79da9b9, type: 3}

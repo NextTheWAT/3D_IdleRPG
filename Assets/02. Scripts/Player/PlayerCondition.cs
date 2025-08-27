@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-public class PlayerCondition : BaseCondition
+public class PlayerCondition : BaseCondition, IDamageable
 {
     [Header("Mana")]
     [SerializeField] private float mana = 50f;
@@ -101,5 +101,10 @@ public class PlayerCondition : BaseCondition
         // 플레이어 전용 추가 처리 필요하면 여기에
     }
 
+    // ===== IDamageable =====
+    public void TakeDamage(float damage)
+    {
+        AddHealth(-Mathf.Abs(damage));
+    }
 
 }

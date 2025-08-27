@@ -6,20 +6,20 @@ public class CurrencyManager : MonoBehaviour
     public static CurrencyManager Instance { get; private set; }
 
     [SerializeField] private int gold = 0;
-    public UnityEvent<int> onGoldChanged = new();
+    [SerializeField] private GoldUI goldUI; // GoldUI 레퍼런스
 
     private void Awake()
     {
         if (Instance && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
-        onGoldChanged.Invoke(CurrentGold); // 시작 시 초기값 알림
+        goldUI.UpdateGoldUI(gold);
     }
 
     public void AddGold(int amount)
     {
         if (amount <= 0) return;
         gold += amount;
-        onGoldChanged.Invoke(gold);
+        goldUI.UpdateGoldUI(gold);
     }
 
     public bool TrySpendGold(int amount)
@@ -27,10 +27,7 @@ public class CurrencyManager : MonoBehaviour
         if (amount <= 0) return true;
         if (gold < amount) return false;
         gold -= amount;
-        onGoldChanged.Invoke(gold);
         return true;
     }
 
-
-    public int CurrentGold => gold;
 }

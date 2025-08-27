@@ -12,15 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8235412c0152b148971a5126b770855, type: 3}
   m_Name: WD_CannonLv2
   m_EditorClassIdentifier: 
-  weaponId: 1
+  weaponId: 0
   displayName: CannnonLv2
   icon: {fileID: 21300000, guid: 6abe5d5cd5f197f43bb8a55993288bf2, type: 3}
   weaponPrefab: {fileID: 1000013227101710, guid: 536bd722ecfff9642a364fec047b5244, type: 3}
   damage: 7
   range: 20
   fireCooldown: 0.4
-  projectileSpeed: 100
+  projectileSpeed: 50
   maxFirePoints: 1
   maxLevelPerTier: 5
   nextTier: {fileID: 11400000, guid: 6be05c7ee216227419cf905d017bf72c, type: 2}
+  damagePerLevel: 1
   upgradeVfxPrefab: {fileID: 8895539338366349026, guid: 82a13a6dd6315dd48ae156fbd79da9b9, type: 3}
