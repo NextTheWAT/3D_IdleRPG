@@ -76,7 +76,7 @@ public class WeaponSlotsManager : Singleton<WeaponSlotsManager>
         if (s.weaponInstance != null)
         {
             s.weaponInstance.SetData(s.data);
-            s.weaponInstance.ApplyLevel(s.level, s.data.damagePerLevel); // ★ 추가
+            s.weaponInstance.ApplyLevel(s.level, s.data.damagePerLevel); // 추가
         }
     }
 
@@ -95,10 +95,46 @@ public class WeaponSlotsManager : Singleton<WeaponSlotsManager>
         if (s.weaponInstance != null)
         {
             s.weaponInstance.SetData(s.data);
-            s.weaponInstance.ApplyLevel(s.level, s.data.damagePerLevel); // ★ 추가
+            s.weaponInstance.ApplyLevel(s.level, s.data.damagePerLevel); // 추가
         }
     }
+    public float GetDamageIfUpgraded(int idx)
+    {
+        var s = GetSlot(idx);
+        if (s == null || s.data == null) return 0f;
 
+        // 같은 티어에서 레벨업 가능한 경우
+        if (s.level < s.data.maxLevelPerTier)
+        {
+            int nextLevel = s.level + 1;
+            return s.data.damage + (nextLevel - 1) * s.data.damagePerLevel;
+        }
+
+        // 티어 업 가능한 경우(다음 티어 1레벨 기준)
+        if (s.data.nextTier != null)
+        {
+            var next = s.data.nextTier;
+            return next.damage; // 필요 시 next.damagePerLevel 등 규칙 추가
+        }
+
+        // 더 이상 상승 불가면 현재값 유지
+        return GetCurrentDamage(idx);
+    }
+    public float GetCurrentDamage(int idx)
+    {
+        var s = GetSlot(idx);
+        if (s == null || s.data == null) return 0f;
+
+        int curLevel = Mathf.Max(1, s.level); // level이 1부터라면 그대로, 0부터면 +1 개념
+        return s.data.damage + (curLevel - 1) * s.data.damagePerLevel;
+    }
+
+    public bool CanUpgrade(int idx)
+    {
+        var s = GetSlot(idx);
+        if (s == null || s.data == null) return false;
+        return s.level < s.data.maxLevelPerTier || s.data.nextTier != null;
+    }
     private void PlayUpgradeVfx(WeaponSlot s)
     {
         // 1) 무기 데이터에 지정된 VFX 우선

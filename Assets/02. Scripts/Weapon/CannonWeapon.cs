@@ -31,6 +31,7 @@ public class CannonWeapon : BaseWeapon
             if (proj != null && data != null)
             {
                 proj.Init(damage: runtimeDamage, speed: data.projectileSpeed, maxDistance: data.range);
+                Debug.Log(runtimeDamage);
             }
 
             // 2) 머즐 플래쉬 (발사 포인트 자식으로 붙임)

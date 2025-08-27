@@ -6,7 +6,9 @@ public class PlayerCondition : BaseCondition, IDamageable
     [Header("Mana")]
     [SerializeField] private float mana = 50f;
     [SerializeField] private float maxMana = 50f;
+
     public float Mana => mana;
+    public float MaxMana => maxMana;
 
     [Header("Experience / Level")]
     [SerializeField] private int level = 1;
@@ -33,7 +35,7 @@ public class PlayerCondition : BaseCondition, IDamageable
     // --- 외부에서 쓰는 간단 API ---
 
     // 마나 소모(스킬 사용 등)
-    public bool UseMana(int amount)
+    public bool UseMana(float amount)
     {
         if (amount <= 0) return true;
         if (mana < amount) return false;
@@ -44,7 +46,7 @@ public class PlayerCondition : BaseCondition, IDamageable
     }
 
     // 마나 회복(포션 등)
-    public void RestoreMana(int amount)
+    public void RestoreMana(float amount)
     {
         if (amount <= 0) return;
         mana = Mathf.Min(maxMana, mana + amount);

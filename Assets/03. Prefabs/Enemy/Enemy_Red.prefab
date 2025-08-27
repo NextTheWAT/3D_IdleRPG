@@ -73,7 +73,7 @@ MonoBehaviour:
   contactDamage: 10
   contactCooldown: 0.25
   applyKnockback: 1
-  knockbackForce: 20
+  knockbackForce: 50
   enemyGameObject: {fileID: 2359071432619776495}
 --- !u!1 &1011274360754057424
 GameObject:
@@ -249,9 +249,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0fd31eb7707c24f43a873ed193ea36dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  health: 20
+  health: 50
   minHealth: 0
-  maxHealth: 100
+  maxHealth: 50
   onHealthChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -261,8 +261,9 @@ MonoBehaviour:
   deathVfxPrefab: {fileID: 1000013462590818, guid: 9054c37ab4905f54da2f4873a5b46bbd, type: 3}
   deathVfxLifetime: 1
   enemyAI: {fileID: 0}
-  enemyAttack: {fileID: 0}
   goldValue: 10
+  toughnessMultiplier: 1
+  addToMultBaseline: 100
 --- !u!114 &8267544585313524511
 MonoBehaviour:
   m_ObjectHideFlags: 0

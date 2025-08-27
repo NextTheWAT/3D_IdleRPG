@@ -4,6 +4,8 @@ public partial class AttackController : MonoBehaviour
 {
     [SerializeField] private Animator animator;
 
+    [SerializeField] private int manaCost = 20;
+
     private readonly int spinHash = Animator.StringToHash("Spin_Attack");
     private readonly int gunHash = Animator.StringToHash("Gun_Attack");
 
@@ -17,7 +19,9 @@ public partial class AttackController : MonoBehaviour
     /// </summary>
     public void PlaySpinAttack()
     {
+        if(GameManager.Instance.playerCondition.Mana < manaCost) return;
         animator.SetTrigger(spinHash);
+        GameManager.Instance.playerCondition.UseMana(manaCost);
     }
 
     /// <summary>

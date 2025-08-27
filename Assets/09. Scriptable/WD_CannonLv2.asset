@@ -17,7 +17,7 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 6abe5d5cd5f197f43bb8a55993288bf2, type: 3}
   weaponPrefab: {fileID: 1000013227101710, guid: 536bd722ecfff9642a364fec047b5244, type: 3}
   damage: 7
-  range: 20
+  range: 30
   fireCooldown: 0.4
   projectileSpeed: 50
   maxFirePoints: 1

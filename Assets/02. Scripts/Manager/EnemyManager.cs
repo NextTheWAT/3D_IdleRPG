@@ -3,37 +3,62 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class EnemyManager : Singleton<EnemyManager>
+/// <summary>
+/// 적 스폰 전담 + 스폰 순간에 현재 스테이지 버프 적용.
+/// HP 보정은 선택적 훅: Enemy 루트(또는 자식)에
+///   void ApplyStageHealth(StageHealthMod mod)
+/// 를 구현해 두면 자동 호출된다(없어도 에러 없음).
+/// </summary>
+public class EnemyManager : MonoBehaviour
 {
     [Header("Enemy Prefabs (랜덤 선택)")]
     [SerializeField] private GameObject[] enemyPrefabs;
-    
-    [Header("Spawn Mode (둘 중 하나 사용)")]
-    [SerializeField] private BoxCollider navmeshArea;   // 이 박스 범위 안에서만 스폰(권장)
-    [SerializeField] private Transform[] spawnAnchors;  // 또는 앵커들 중 하나 주변 반경에서 스폰
-    [SerializeField] private float anchorRadius = 10f;  // 앵커 기준 반경
+
+    [Header("Spawn Area (둘 중 하나 사용)")]
+    [SerializeField] private BoxCollider navmeshArea;   // 이 박스 범위 안에서 스폰
 
     [Header("Spawn Rules")]
-    [SerializeField] private int maxAlive = 10;         // 동시 존재 최대 수
-    [SerializeField] private float spawnInterval = 2f;  // 스폰 간격(초)
-    [SerializeField] private int spawnPerTick = 1;      // 틱당 소환 수
+    [SerializeField] private int maxAlive = 10;
+    [SerializeField] private float spawnInterval = 2f;
+    [SerializeField] private int spawnPerTick = 1;
 
-    [Header("NavMesh Settings")]
-    [SerializeField] private string[] allowedAreaNames = { "Walkable" }; // 허용 NavMesh Area
-    [SerializeField] private float sampleMaxDistance = 2f; // 랜덤 점 근처에서 NavMesh 샘플링 탐색거리
+    [Header("NavMesh Filter")]
+    [SerializeField] private string[] allowedAreaNames = { "Walkable" };
+    [SerializeField] private float sampleMaxDistance = 2f;
 
-    [Header("Misc")]
-    [SerializeField] private bool randomYRotation = true;
+    [Header("Buff Targets")]
+    [Tooltip("새로 스폰되는 적에만 버프 적용")]
+    [SerializeField] private bool buffOnlyNewSpawns = true;
+    [Tooltip("스테이지가 바뀔 때 이미 살아있는 적에게도 즉시 버프 적용")]
+    [SerializeField] private bool buffAliveOnStageChange = false;
 
     private readonly List<GameObject> alive = new();
     private int areaMask;
 
+    // HP 보정용 페이로드(선택적 훅)
+    public struct StageHealthMod
+    {
+        public int stage;
+        public float hpAddPerStage;
+        public float hpMultPerStage;
+    }
+
     private void Awake()
     {
         BuildAreaMask();
-
-        // BoxCollider를 스폰 영역으로 쓰는 경우, isTrigger 권장
         if (navmeshArea != null) navmeshArea.isTrigger = true;
+    }
+
+    private void OnEnable()
+    {
+        if (StageManager.IsInitialized)
+            StageManager.Instance.OnStageChanged += HandleStageChanged;
+    }
+
+    private void OnDisable()
+    {
+        if (StageManager.IsInitialized)
+            StageManager.Instance.OnStageChanged -= HandleStageChanged;
     }
 
     private void Start()
@@ -63,23 +88,25 @@ public class EnemyManager : Singleton<EnemyManager>
             {
                 if (TryGetRandomNavmeshPosition(out Vector3 spawnPos))
                 {
-                    SpawnOne(spawnPos);
+                    var go = SpawnOne(spawnPos);
+                    if (go != null && (!buffOnlyNewSpawns || buffOnlyNewSpawns))
+                    {
+                        ApplyStageBuff(go); // 새로 스폰된 적 버프
+                    }
                 }
             }
-
             yield return wait;
         }
     }
 
-    private void SpawnOne(Vector3 position)
+    private GameObject SpawnOne(Vector3 position)
     {
         var prefab = enemyPrefabs[Random.Range(0, enemyPrefabs.Length)];
-        Quaternion rot = randomYRotation
-            ? Quaternion.Euler(0f, Random.Range(0f, 360f), 0f)
-            : prefab.transform.rotation;
+        Quaternion rot = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
 
         var go = Instantiate(prefab, position, rot);
         alive.Add(go);
+        return go;
     }
 
     private void CompactAliveList()
@@ -92,14 +119,11 @@ public class EnemyManager : Singleton<EnemyManager>
 
     private bool TryGetRandomNavmeshPosition(out Vector3 position)
     {
-        // 여러 번 시도해서 NavMesh 위 좌표를 찾는다
         const int maxTries = 30;
 
         for (int i = 0; i < maxTries; i++)
         {
-            Vector3 candidate = (navmeshArea != null)
-                ? RandomPointInBox(navmeshArea.bounds)
-                : RandomPointNearAnchor();
+            Vector3 candidate = RandomPointInBox(navmeshArea.bounds);
 
             if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, sampleMaxDistance, areaMask))
             {
@@ -115,20 +139,11 @@ public class EnemyManager : Singleton<EnemyManager>
     private Vector3 RandomPointInBox(Bounds b)
     {
         float x = Random.Range(b.min.x, b.max.x);
-        float y = b.center.y; // 높이는 샘플링에서 보정될 것
+        float y = b.center.y;
         float z = Random.Range(b.min.z, b.max.z);
         return new Vector3(x, y, z);
     }
 
-    private Vector3 RandomPointNearAnchor()
-    {
-        Transform anchor = (spawnAnchors != null && spawnAnchors.Length > 0)
-            ? spawnAnchors[Random.Range(0, spawnAnchors.Length)]
-            : transform;
-
-        Vector2 r = Random.insideUnitCircle * anchorRadius;
-        return new Vector3(anchor.position.x + r.x, anchor.position.y, anchor.position.z + r.y);
-    }
 
     private void BuildAreaMask()
     {
@@ -145,27 +160,53 @@ public class EnemyManager : Singleton<EnemyManager>
         areaMask = (mask == 0) ? NavMesh.AllAreas : mask;
     }
 
-#if UNITY_EDITOR
-    private void OnDrawGizmosSelected()
+    // --------- Stage 연동 ---------
+
+    private void HandleStageChanged(int newStage)
     {
-        // 영역 시각화
-        Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.15f);
-        if (navmeshArea != null)
+        if (!buffAliveOnStageChange) return;
+
+        // 살아있는 적 전체에 즉시 버프 적용
+        for (int i = alive.Count - 1; i >= 0; --i)
         {
-            var b = navmeshArea.bounds;
-            Gizmos.DrawCube(b.center, b.size);
-            Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.6f);
-            Gizmos.DrawWireCube(b.center, b.size);
-        }
-        else if (spawnAnchors != null)
-        {
-            Gizmos.color = new Color(0.2f, 1f, 0.4f, 0.6f);
-            foreach (var t in spawnAnchors)
-            {
-                if (t == null) continue;
-                Gizmos.DrawWireSphere(t.position, anchorRadius);
-            }
+            if (alive[i] != null) ApplyStageBuff(alive[i]);
         }
     }
-#endif
+
+    private void ApplyStageBuff(GameObject enemyRoot)
+    {
+        if (!StageManager.IsInitialized) return;
+        int stage = StageManager.Instance.CurrentStage;
+        if (stage <= 1) return; // 1스테이지는 기본값 유지
+
+        int n = stage - 1;
+
+        // 1) 스피드 보정(NavMeshAgent)
+        var agent = enemyRoot.GetComponent<NavMeshAgent>();
+        if (agent != null)
+        {
+            float speed = agent.speed;
+
+            float mult = StageManager.Instance.speedMultPerStage;
+            float add = StageManager.Instance.speedAddPerStage;
+
+            if (mult > 0f && !Mathf.Approximately(mult, 1f))
+                speed *= Mathf.Pow(mult, n);
+            if (!Mathf.Approximately(add, 0f))
+                speed += add * n;
+
+            agent.speed = speed;
+        }
+
+        // 2) HP 보정(선택적 훅)
+        // EnemyCondition(또는 다른 컴포넌트)에 아래 시그니처를 구현해두면 자동 호출됨:
+        //   void ApplyStageHealth(EnemyManager.StageHealthMod mod)
+        var mod = new StageHealthMod
+        {
+            stage = stage,
+            hpAddPerStage = StageManager.Instance.hpAddPerStage,
+            hpMultPerStage = StageManager.Instance.hpMultPerStage
+        };
+        enemyRoot.SendMessage("ApplyStageHealth", mod, SendMessageOptions.DontRequireReceiver);
+    }
 }

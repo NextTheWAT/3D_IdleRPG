@@ -4,8 +4,14 @@ using UnityEngine;
 
 public class GameManager : Singleton<GameManager>
 {
-    [SerializeField] private PlayerCondition playerCondition;
+    [SerializeField] public PlayerCondition playerCondition;
 
 
 
+
+    public void PlayerHeal()
+    {
+        playerCondition.AddHealth(playerCondition.GetHealth());
+        playerCondition.RestoreMana(playerCondition.MaxMana);
+    }
 }
