@@ -24,4 +24,4 @@ MonoBehaviour:
   maxLevelPerTier: 5
   nextTier: {fileID: 11400000, guid: 6be05c7ee216227419cf905d017bf72c, type: 2}
   damagePerLevel: 1
-  upgradeVfxPrefab: {fileID: 8895539338366349026, guid: 82a13a6dd6315dd48ae156fbd79da9b9, type: 3}
+  upgradeVfxPrefab: {fileID: 1556941434285710, guid: f35d1a1092f633f4aabf9853b4707bd9, type: 3}

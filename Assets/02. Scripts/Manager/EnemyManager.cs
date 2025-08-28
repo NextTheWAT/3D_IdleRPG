@@ -187,11 +187,11 @@ public class EnemyManager : MonoBehaviour
         {
             float speed = agent.speed;
 
-            float mult = StageManager.Instance.speedMultPerStage;
+            //float mult = StageManager.Instance.speedMultPerStage;
             float add = StageManager.Instance.speedAddPerStage;
 
-            if (mult > 0f && !Mathf.Approximately(mult, 1f))
-                speed *= Mathf.Pow(mult, n);
+            //if (mult > 0f && !Mathf.Approximately(mult, 1f))
+            //    speed *= Mathf.Pow(mult, n);
             if (!Mathf.Approximately(add, 0f))
                 speed += add * n;
 
@@ -205,7 +205,7 @@ public class EnemyManager : MonoBehaviour
         {
             stage = stage,
             hpAddPerStage = StageManager.Instance.hpAddPerStage,
-            hpMultPerStage = StageManager.Instance.hpMultPerStage
+            //hpMultPerStage = StageManager.Instance.hpMultPerStage
         };
         enemyRoot.SendMessage("ApplyStageHealth", mod, SendMessageOptions.DontRequireReceiver);
     }

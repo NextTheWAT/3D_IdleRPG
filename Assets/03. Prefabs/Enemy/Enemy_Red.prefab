@@ -73,7 +73,7 @@ MonoBehaviour:
   contactDamage: 10
   contactCooldown: 0.25
   applyKnockback: 1
-  knockbackForce: 50
+  knockbackForce: 20
   enemyGameObject: {fileID: 2359071432619776495}
 --- !u!1 &1011274360754057424
 GameObject:

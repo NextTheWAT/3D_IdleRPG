@@ -20,12 +20,12 @@ public class StageManager : Singleton<StageManager>
     [Header("Per-Stage Buffs (원하는 값으로 조절)")]
     [Tooltip("스테이지 1단계 상승당 HP 가산량(예: +25)")]
     public float hpAddPerStage = 0f;
-    [Tooltip("스테이지 1단계 상승당 HP 배율(예: 1.10 = +10%)")]
-    public float hpMultPerStage = 1f;
+    //[Tooltip("스테이지 1단계 상승당 HP 배율(예: 1.10 = +10%)")]
+    //public float hpMultPerStage = 1f;
     [Tooltip("스테이지 1단계 상승당 스피드 가산량(예: +0.4)")]
     public float speedAddPerStage = 0f;
-    [Tooltip("스테이지 1단계 상승당 스피드 배율(예: 1.05 = +5%)")]
-    public float speedMultPerStage = 1f;
+    //[Tooltip("스테이지 1단계 상승당 스피드 배율(예: 1.05 = +5%)")]
+    //public float speedMultPerStage = 1f;
 
     /// <summary>스테이지 변경 시 (새 스테이지 번호)</summary>
     public event Action<int> OnStageChanged;

@@ -1,11 +1,11 @@
-// WeaponSlotsManager.cs (ÀüÃ¼ °»½Å ¿¹½Ã)
+ï»¿// WeaponSlotsManager.cs (ì „ì²´ ê°±ì‹  ì˜ˆì‹œ)
 using UnityEngine;
 
 [System.Serializable]
 public class WeaponSlot
 {
     public string slotName = "Cannon";
-    public Transform mount;                 // »ı¼º ±âÁØ
+    public Transform mount;                 // ìƒì„± ê¸°ì¤€
     public BaseWeapon weaponInstance;
     public WeaponData data;
     public int level = 1;
@@ -13,16 +13,16 @@ public class WeaponSlot
 
 public class WeaponSlotsManager : Singleton<WeaponSlotsManager>
 {
-    [Tooltip("Cannon1/2/3 ¼ø¼­´ë·Î 3°³")]
+    [Tooltip("Cannon1/2/3 ìˆœì„œëŒ€ë¡œ 3ê°œ")]
     public WeaponSlot[] slots = new WeaponSlot[3];
 
-    // °ø¿ë VFX (¹«±âº° VFX¸¦ ¿ì¼± »ç¿ëÇÏ°í, ¾øÀ¸¸é ÀÌ°É »ç¿ë)
+    // ê³µìš© VFX (ë¬´ê¸°ë³„ VFXë¥¼ ìš°ì„  ì‚¬ìš©í•˜ê³ , ì—†ìœ¼ë©´ ì´ê±¸ ì‚¬ìš©)
     [Header("VFX (optional)")]
     public GameObject defaultUpgradeVfxPrefab;
 
     private void Start()
     {
-        InitializeSlots(); // ½ÃÀÛ ½Ã ½½·Ôº° ¹«±â ¹Ì¸® »ı¼º
+        InitializeSlots(); // ì‹œì‘ ì‹œ ìŠ¬ë¡¯ë³„ ë¬´ê¸° ë¯¸ë¦¬ ìƒì„±
     }
 
     public WeaponSlot GetSlot(int idx) => (idx >= 0 && idx < slots.Length) ? slots[idx] : null;
@@ -34,7 +34,7 @@ public class WeaponSlotsManager : Singleton<WeaponSlotsManager>
             var s = slots[i];
             if (s == null || s.data == null || s.mount == null) continue;
 
-            // µ¥ÀÌÅÍÀÇ ÇÁ¸®ÆÕÀ¸·Î »ı¼º
+            // ë°ì´í„°ì˜ í”„ë¦¬íŒ¹ìœ¼ë¡œ ìƒì„±
             SpawnAtMount(s);
         }
     }
@@ -44,29 +44,37 @@ public class WeaponSlotsManager : Singleton<WeaponSlotsManager>
         var s = GetSlot(idx);
         if (s == null || s.data == null) return false;
 
-        s.level++;  // ·¹º§ +1
+        bool didUpgrade = false;
 
-        if (s.level > s.data.maxLevelPerTier)
+        // ê°™ì€ í‹°ì–´ ë ˆë²¨ì—…
+        if (s.level < s.data.maxLevelPerTier)
         {
-            if (s.data.nextTier != null)
-            {
-                s.data = s.data.nextTier;
-                s.level = 1;
-                ReplaceInstanceWithTierPrefab(s); // ÇÁ¸®ÆÕ ±³Ã¼
-            }
-            else
-            {
-                s.level = s.data.maxLevelPerTier;
-                return false;
-            }
+            s.level++;
+            didUpgrade = true;
+        }
+        // í‹°ì–´ ì—…
+        else if (s.data.nextTier != null)
+        {
+            s.data = s.data.nextTier;
+            s.level = 1;
+            ReplaceInstanceWithTierPrefab(s);   // í”„ë¦¬íŒ¹ êµì²´ í›„
+            didUpgrade = true;
+        }
+        else
+        {
+            return false; // ë” ì´ìƒ ì—…ê·¸ë ˆì´ë“œ ì—†ìŒ
         }
 
-        // ÇöÀç ·¹º§À» ¹«±â¿¡ ¹İ¿µ (damage = base + (level-1)*perLevel)
+        // ìˆ˜ì¹˜ ë°˜ì˜
         if (s.weaponInstance != null)
             s.weaponInstance.ApplyLevel(s.level, s.data.damagePerLevel);
 
+        // ì—…ê·¸ë ˆì´ë“œ VFX í˜¸ì¶œ (ë ˆë²¨/í‹°ì–´ ì—… ëª¨ë‘ ì—¬ê¸°ì„œ ì²˜ë¦¬)
+        if (didUpgrade) PlayUpgradeVfx(s);
+
         return true;
     }
+
 
     private void SpawnAtMount(WeaponSlot s)
     {
@@ -76,7 +84,7 @@ public class WeaponSlotsManager : Singleton<WeaponSlotsManager>
         if (s.weaponInstance != null)
         {
             s.weaponInstance.SetData(s.data);
-            s.weaponInstance.ApplyLevel(s.level, s.data.damagePerLevel); // Ãß°¡
+            s.weaponInstance.ApplyLevel(s.level, s.data.damagePerLevel); // ì¶”ê°€
         }
     }
 
@@ -95,7 +103,7 @@ public class WeaponSlotsManager : Singleton<WeaponSlotsManager>
         if (s.weaponInstance != null)
         {
             s.weaponInstance.SetData(s.data);
-            s.weaponInstance.ApplyLevel(s.level, s.data.damagePerLevel); // Ãß°¡
+            s.weaponInstance.ApplyLevel(s.level, s.data.damagePerLevel); // ì¶”ê°€
         }
     }
     public float GetDamageIfUpgraded(int idx)
@@ -103,21 +111,21 @@ public class WeaponSlotsManager : Singleton<WeaponSlotsManager>
         var s = GetSlot(idx);
         if (s == null || s.data == null) return 0f;
 
-        // °°Àº Æ¼¾î¿¡¼­ ·¹º§¾÷ °¡´ÉÇÑ °æ¿ì
+        // ê°™ì€ í‹°ì–´ì—ì„œ ë ˆë²¨ì—… ê°€ëŠ¥í•œ ê²½ìš°
         if (s.level < s.data.maxLevelPerTier)
         {
             int nextLevel = s.level + 1;
             return s.data.damage + (nextLevel - 1) * s.data.damagePerLevel;
         }
 
-        // Æ¼¾î ¾÷ °¡´ÉÇÑ °æ¿ì(´ÙÀ½ Æ¼¾î 1·¹º§ ±âÁØ)
+        // í‹°ì–´ ì—… ê°€ëŠ¥í•œ ê²½ìš°(ë‹¤ìŒ í‹°ì–´ 1ë ˆë²¨ ê¸°ì¤€)
         if (s.data.nextTier != null)
         {
             var next = s.data.nextTier;
-            return next.damage; // ÇÊ¿ä ½Ã next.damagePerLevel µî ±ÔÄ¢ Ãß°¡
+            return next.damage; // í•„ìš” ì‹œ next.damagePerLevel ë“± ê·œì¹™ ì¶”ê°€
         }
 
-        // ´õ ÀÌ»ó »ó½Â ºÒ°¡¸é ÇöÀç°ª À¯Áö
+        // ë” ì´ìƒ ìƒìŠ¹ ë¶ˆê°€ë©´ í˜„ì¬ê°’ ìœ ì§€
         return GetCurrentDamage(idx);
     }
     public float GetCurrentDamage(int idx)
@@ -125,7 +133,7 @@ public class WeaponSlotsManager : Singleton<WeaponSlotsManager>
         var s = GetSlot(idx);
         if (s == null || s.data == null) return 0f;
 
-        int curLevel = Mathf.Max(1, s.level); // levelÀÌ 1ºÎÅÍ¶ó¸é ±×´ë·Î, 0ºÎÅÍ¸é +1 °³³ä
+        int curLevel = Mathf.Max(1, s.level); // levelì´ 1ë¶€í„°ë¼ë©´ ê·¸ëŒ€ë¡œ, 0ë¶€í„°ë©´ +1 ê°œë…
         return s.data.damage + (curLevel - 1) * s.data.damagePerLevel;
     }
 
@@ -137,17 +145,30 @@ public class WeaponSlotsManager : Singleton<WeaponSlotsManager>
     }
     private void PlayUpgradeVfx(WeaponSlot s)
     {
-        // 1) ¹«±â µ¥ÀÌÅÍ¿¡ ÁöÁ¤µÈ VFX ¿ì¼±
-        GameObject vfxPrefab = s.data != null && s.data.upgradeVfxPrefab != null
+        GameObject vfxPrefab = (s.data != null && s.data.upgradeVfxPrefab != null)
             ? s.data.upgradeVfxPrefab
             : defaultUpgradeVfxPrefab;
+
         if (vfxPrefab == null || s.weaponInstance == null) return;
 
-        var t = s.weaponInstance.transform;
-        var vfx = Instantiate(vfxPrefab, t.position, t.rotation, t); // ¹«±â¿¡ ÀÚ½ÄÀ¸·Î ºÙÀÌ±â
-        // ÆÄÆ¼Å¬ÀÌ ÀÚµ¿ ÆÄ±«(Stop Action: Destroy) ¼³Á¤ÀÌ¸é Ãß°¡ ÄÚµå ºÒÇÊ¿ä
-        // ¾Æ´Ï¶ó¸é ´ÙÀ½ ¶óÀÎÃ³·³ ÀÏÁ¤ ½Ã°£ ÈÄ ÆÄ±«:
-        // Destroy(vfx, 3f);
+        Transform t = s.weaponInstance.transform;
+
+        // 1) ì›”ë“œ íšŒì „ê°’ì„ "ìœ„ìª½"ìœ¼ë¡œ ê³ ì •í•´ ìƒì„±
+        Quaternion worldRot = Quaternion.LookRotation(Vector3.up); // Z+ê°€ ìœ„ë¡œ í–¥í•˜ê²Œ
+
+        // 2) ë¶€ëª¨ì— ë¶™ì—¬ë„ ë˜ê³ (í•œ ë²ˆë§Œ ì¬ìƒì´ë©´ êµ³ì´ ì•ˆ ë¶™ì—¬ë„ OK)
+        var go = Instantiate(vfxPrefab, t.position, worldRot, t); // ë¶€ëª¨ ë¶™ì´ê¸° ì›ì¹˜ ì•Šìœ¼ë©´ ,t ì œê±°
+
+        var ps = go.GetComponent<ParticleSystem>();
+        if (ps != null)
+        {
+            // 3) ë¶€ëª¨ê°€ íšŒì „í•´ë„ íŒŒí‹°í´ì€ ê³„ì† ìœ„ë¡œ ë‚ ë„ë¡ ì›”ë“œ ì‹œë®¬ë ˆì´ì…˜ ê¶Œì¥
+            var main = ps.main;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            ps.Play();
+        }
+
+        Destroy(go, 3f);
     }
 
 }
