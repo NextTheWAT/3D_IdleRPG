@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-/// <summary>
-/// 적 스폰 전담 + 스폰 순간에 현재 스테이지 버프 적용.
-/// HP 보정은 선택적 훅: Enemy 루트(또는 자식)에
-///   void ApplyStageHealth(StageHealthMod mod)
-/// 를 구현해 두면 자동 호출된다(없어도 에러 없음).
-/// </summary>
+public class EnemySpawnSnapshot : MonoBehaviour
+{
+    public float baseSpeed;
+}
+
 public class EnemyManager : MonoBehaviour
 {
     [Header("Enemy Prefabs (랜덤 선택)")]
@@ -98,7 +97,6 @@ public class EnemyManager : MonoBehaviour
             yield return wait;
         }
     }
-
     private GameObject SpawnOne(Vector3 position)
     {
         var prefab = enemyPrefabs[Random.Range(0, enemyPrefabs.Length)];
@@ -106,6 +104,13 @@ public class EnemyManager : MonoBehaviour
 
         var go = Instantiate(prefab, position, rot);
         alive.Add(go);
+
+        var agent = go.GetComponent<UnityEngine.AI.NavMeshAgent>();
+        if (agent)
+        {
+            var snap = go.AddComponent<EnemySpawnSnapshot>();
+            snap.baseSpeed = agent.speed; // 기준 속도 저장
+        }
         return go;
     }
 
@@ -177,35 +182,16 @@ public class EnemyManager : MonoBehaviour
     {
         if (!StageManager.IsInitialized) return;
         int stage = StageManager.Instance.CurrentStage;
-        if (stage <= 1) return; // 1스테이지는 기본값 유지
+        if (stage <= 1) return;
 
         int n = stage - 1;
 
-        // 1) 스피드 보정(NavMeshAgent)
-        var agent = enemyRoot.GetComponent<NavMeshAgent>();
-        if (agent != null)
-        {
-            float speed = agent.speed;
-
-            //float mult = StageManager.Instance.speedMultPerStage;
-            float add = StageManager.Instance.speedAddPerStage;
-
-            //if (mult > 0f && !Mathf.Approximately(mult, 1f))
-            //    speed *= Mathf.Pow(mult, n);
-            if (!Mathf.Approximately(add, 0f))
-                speed += add * n;
-
-            agent.speed = speed;
-        }
-
-        // 2) HP 보정(선택적 훅)
-        // EnemyCondition(또는 다른 컴포넌트)에 아래 시그니처를 구현해두면 자동 호출됨:
-        //   void ApplyStageHealth(EnemyManager.StageHealthMod mod)
+        // 2) HP: EnemyCondition이 절대 가산형으로 처리
         var mod = new StageHealthMod
         {
             stage = stage,
             hpAddPerStage = StageManager.Instance.hpAddPerStage,
-            //hpMultPerStage = StageManager.Instance.hpMultPerStage
+            hpMultPerStage = 0f // 더이상 사용 안 함
         };
         enemyRoot.SendMessage("ApplyStageHealth", mod, SendMessageOptions.DontRequireReceiver);
     }

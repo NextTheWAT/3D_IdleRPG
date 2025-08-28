@@ -2797,7 +2797,7 @@ MonoBehaviour:
   - Walkable
   sampleMaxDistance: 2
   buffOnlyNewSpawns: 1
-  buffAliveOnStageChange: 1
+  buffAliveOnStageChange: 0
 --- !u!4 &403778427 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7167402178944014150, guid: 03df31a2199025d4aaf52d804031dfea, type: 3}
@@ -7707,8 +7707,8 @@ MonoBehaviour:
   stageDuration: 10
   stageText: {fileID: 298841413}
   timerText: {fileID: 1789015035}
-  hpAddPerStage: 100
-  speedAddPerStage: 0
+  hpAddPerStage: 25
+  speedAddPerStage: 10
 --- !u!1 &1536808082
 GameObject:
   m_ObjectHideFlags: 0
@@ -12366,6 +12366,10 @@ PrefabInstance:
     - target: {fileID: 8183390646967100981, guid: 03df31a2199025d4aaf52d804031dfea, type: 3}
       propertyPath: m_Layer
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191743518767114372, guid: 03df31a2199025d4aaf52d804031dfea, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8201959740933963616, guid: 03df31a2199025d4aaf52d804031dfea, type: 3}
       propertyPath: m_Layer

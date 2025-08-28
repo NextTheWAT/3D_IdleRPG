@@ -68,7 +68,6 @@ public abstract class BaseCondition : MonoBehaviour
         SetHealth(health + delta);
     }
 
-
     /// <summary>
     /// 사망 처리: onDied 이벤트 호출
     /// 파생 클래스에서 오버라이드하여 추가 동작 구현 가능
@@ -79,4 +78,5 @@ public abstract class BaseCondition : MonoBehaviour
         onDied?.Invoke();
         // e.g. 플레이어: 게임 오버 처리 / 몬스터: 파괴 이펙트 등
     }
+
 }
