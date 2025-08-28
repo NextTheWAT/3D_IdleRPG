@@ -209,8 +209,6 @@ MonoBehaviour:
   data: {fileID: 11400000, guid: 07012183ac16c734aa8081d8955d5ac0, type: 2}
   firePoints:
   - {fileID: 6533892778636613191}
-  sfxSource: {fileID: 0}
-  shootClip: {fileID: 0}
   enemyLayer:
     serializedVersion: 2
     m_Bits: 64
@@ -222,6 +220,7 @@ MonoBehaviour:
   projectilePrefab: {fileID: 5604022523568923903, guid: 0a942970bd913b84084ca28422269f7f, type: 3}
   muzzleFlashPrefab: {fileID: 1000010254994808, guid: b2dd3d6fe6b7f884082c17c03bcec6f4, type: 3}
   muzzleFlashLifetime: 0.5
+  muzzleFlashForwardOffset: 0.15
 --- !u!1 &4133218776109661242
 GameObject:
   m_ObjectHideFlags: 0

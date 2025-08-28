@@ -16,7 +16,7 @@ public partial class AttackController : MonoBehaviour
     [SerializeField, HideInInspector] private bool isSpinning = false; // 인스펙터에서 실수로 체크 방지
     private HashSet<Collider> hitThisSpin = new();
 
-    // ★ 루프 파티클 캐시(한 번 만들고 재사용)
+    // 루프 파티클 캐시(한 번 만들고 재사용)
     private GameObject spinFxObj;
     private ParticleSystem spinPs;
 
@@ -25,7 +25,7 @@ public partial class AttackController : MonoBehaviour
         isSpinning = true;
         hitThisSpin.Clear();
 
-        // ▶ 스핀 시작할 때 파티클 생성/재생
+        // 스핀 시작할 때 파티클 생성/재생
         if (spinParticlePrefab && particleSpawnPoint)
         {
             if (!spinFxObj)
@@ -50,7 +50,7 @@ public partial class AttackController : MonoBehaviour
         isSpinning = false;
         hitThisSpin.Clear();
 
-        // ■ 스핀 끝났을 때 정지(Disable이 필요하면 여기서 spinFxObj.SetActive(false)도 가능)
+        // 스핀 끝났을 때 정지(Disable이 필요하면 여기서 spinFxObj.SetActive(false)도 가능)
         if (spinPs)
             spinPs.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
     }
@@ -59,7 +59,7 @@ public partial class AttackController : MonoBehaviour
     {
         if (!isSpinning) return;
 
-        // ↓↓↓ 히트 체크(파티클 생성 코드는 제거!) ↓↓↓
+        // 히트 체크(파티클 생성 코드는 제거!)
         var hits = (enemyMask.value != ~0)
             ? Physics.OverlapSphere(transform.position, spinHitRadius, enemyMask)
             : Physics.OverlapSphere(transform.position, spinHitRadius);

@@ -10096,7 +10096,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4850408420471750}
   m_Layer: 0
-  m_Name: Eff7_Energy
+  m_Name: HealParticle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

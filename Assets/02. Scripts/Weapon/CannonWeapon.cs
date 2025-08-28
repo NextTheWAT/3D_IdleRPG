@@ -17,6 +17,7 @@ public class CannonWeapon : BaseWeapon
         // 레벨별 머즐 포인트 제한을 쓰고 싶다면 아래 한 줄로 제한 가능
         // int count = Mathf.Min(firePoints.Length, data.maxFirePoints);
         // for (int i = 0; i < count; i++)
+        SoundManager.Instance.PlaySfx(SoundManager.SfxId.CannonShot);
         for (int i = 0; i < firePoints.Length; i++)
         {
             var fp = firePoints[i];

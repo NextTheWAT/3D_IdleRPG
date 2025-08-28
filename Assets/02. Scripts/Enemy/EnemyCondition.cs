@@ -12,7 +12,7 @@ public class EnemyCondition : BaseCondition, IDamageable
     [Header("Gold Value")]
     [SerializeField] private int goldValue = 10;          // 사망 시 플레이어에게 줄 골드 양
 
-    // ★ 스테이지 체력 보정: '받는 피해를 1/m배'로 줄여서 체력 증가 효과를 냄
+    // 스테이지 체력 보정: '받는 피해를 1/m배'로 줄여서 체력 증가 효과를 냄
     [Header("Stage Toughness")]
     [Tooltip("스테이지 보정에 의해 실제로 받는 피해를 1/m 배로 감소시킵니다. 1이면 보정 없음.")]
     [SerializeField] private float toughnessMultiplier = 1f;
@@ -44,6 +44,7 @@ public class EnemyCondition : BaseCondition, IDamageable
     // ===== Death =====
     protected override void Die()
     {
+        base.Die();
         if (isDead) return;   // 재진입 가드
         isDead = true;
 

@@ -7,7 +7,6 @@ public partial class AttackController : MonoBehaviour
     [SerializeField] private int manaCost = 20;
 
     private readonly int spinHash = Animator.StringToHash("Spin_Attack");
-    private readonly int gunHash = Animator.StringToHash("Gun_Attack");
 
     private void Awake()
     {
@@ -19,16 +18,9 @@ public partial class AttackController : MonoBehaviour
     /// </summary>
     public void PlaySpinAttack()
     {
-        if(GameManager.Instance.playerCondition.Mana < manaCost) return;
+        SoundManager.Instance.PlaySfx(SoundManager.SfxId.SpinAttack);
+        if (GameManager.Instance.playerCondition.Mana < manaCost) return;
         animator.SetTrigger(spinHash);
         GameManager.Instance.playerCondition.UseMana(manaCost);
-    }
-
-    /// <summary>
-    /// 총 공격 애니메이션 상태를 제어 (Bool)
-    /// </summary>
-    public void SetGunAttack(bool active)
-    {
-        animator.SetBool(gunHash, active);
     }
 }

@@ -7,11 +7,9 @@ public class GameManager : Singleton<GameManager>
     [SerializeField] public PlayerCondition playerCondition;
 
 
-
-
-    public void PlayerHeal()
+    private void Awake()
     {
-        playerCondition.AddHealth(playerCondition.GetHealth());
-        playerCondition.RestoreMana(playerCondition.MaxMana);
+        if (!playerCondition) playerCondition = FindObjectOfType<PlayerCondition>();
     }
+
 }

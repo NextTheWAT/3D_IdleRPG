@@ -16,10 +16,6 @@ public class WeaponSlotsManager : Singleton<WeaponSlotsManager>
     [Tooltip("Cannon1/2/3 순서대로 3개")]
     public WeaponSlot[] slots = new WeaponSlot[3];
 
-    // 공용 VFX (무기별 VFX를 우선 사용하고, 없으면 이걸 사용)
-    [Header("VFX (optional)")]
-    public GameObject defaultUpgradeVfxPrefab;
-
     private void Start()
     {
         InitializeSlots(); // 시작 시 슬롯별 무기 미리 생성
@@ -145,9 +141,7 @@ public class WeaponSlotsManager : Singleton<WeaponSlotsManager>
     }
     private void PlayUpgradeVfx(WeaponSlot s)
     {
-        GameObject vfxPrefab = (s.data != null && s.data.upgradeVfxPrefab != null)
-            ? s.data.upgradeVfxPrefab
-            : defaultUpgradeVfxPrefab;
+        GameObject vfxPrefab = s.data.upgradeVfxPrefab;
 
         if (vfxPrefab == null || s.weaponInstance == null) return;
 

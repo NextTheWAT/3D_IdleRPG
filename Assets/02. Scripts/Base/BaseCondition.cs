@@ -75,6 +75,7 @@ public abstract class BaseCondition : MonoBehaviour
     /// </summary>
     protected virtual void Die()
     {
+        SoundManager.Instance.PlaySfx(SoundManager.SfxId.Explosion);
         onDied?.Invoke();
         // e.g. 플레이어: 게임 오버 처리 / 몬스터: 파괴 이펙트 등
     }

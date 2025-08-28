@@ -4912,7 +4912,7 @@ GameObject:
   - component: {fileID: -3662544806420924921}
   - component: {fileID: 1933103007873745366}
   m_Layer: 0
-  m_Name: Eff1_Right
+  m_Name: SpinParticle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

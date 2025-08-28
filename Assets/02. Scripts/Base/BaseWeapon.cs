@@ -14,11 +14,6 @@ public abstract class BaseWeapon : MonoBehaviour
     [SerializeField] protected Transform[] firePoints;
     protected float lastFireTime = -999f;
 
-    [Header("FX (optional)")]
-    [SerializeField] protected AudioSource sfxSource;
-    [SerializeField] protected AudioClip shootClip;
-    protected Animator animator;
-
     [Header("Targeting")]
     [SerializeField] private LayerMask enemyLayer;
     [SerializeField] private LayerMask losBlockerLayers;
@@ -33,7 +28,6 @@ public abstract class BaseWeapon : MonoBehaviour
 
     protected virtual void Awake()
     {
-        animator = GetComponentInChildren<Animator>();
         if (aimRoot == null) aimRoot = transform;  // 기본은 자기 자신
      // TrimFirePointsByData();
     }
@@ -119,8 +113,6 @@ public abstract class BaseWeapon : MonoBehaviour
         if (!HasLineOfSight(muzzle, currentTarget.position)) return false;
 
         lastFireTime = Time.time;
-        if (animator) animator.SetTrigger("Shoot");
-        if (sfxSource && shootClip) sfxSource.PlayOneShot(shootClip);
 
         OnFire(currentTarget);
         return true;

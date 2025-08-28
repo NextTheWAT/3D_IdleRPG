@@ -76,10 +76,12 @@ public class UpgradePanelController : MonoBehaviour
     {
         if (views == null) return;
         for (int i = 0; i < views.Length; i++) Refresh(i);
+        SoundManager.Instance.PlaySfx(SoundManager.SfxId.Upgrade);
     }
 
     private void Refresh(int idx)
     {
+
         if (slotsManager == null || views == null || idx < 0 || idx >= views.Length) return;
 
         var v = views[idx];
@@ -110,7 +112,6 @@ public class UpgradePanelController : MonoBehaviour
             v.slotText.SetText($"Damage : {curDmg:0.#} → {nextDmg:0.#}");
             // 비용까지 보여주려면:  v.slotText.SetText($"Damage : {curDmg:0.#} → {nextDmg:0.#}   |   Cost : {upgradeCost}G");
         }
-
         bool canMore = slotsManager.CanUpgrade(idx);
         bool enoughGold = CurrencyManager.Instance != null &&
                           CurrencyManager.Instance.Gold >= upgradeCost;
