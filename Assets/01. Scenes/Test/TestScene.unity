@@ -7708,7 +7708,6 @@ MonoBehaviour:
   stageText: {fileID: 298841413}
   timerText: {fileID: 1789015035}
   hpAddPerStage: 25
-  speedAddPerStage: 10
 --- !u!1 &1536808082
 GameObject:
   m_ObjectHideFlags: 0
@@ -9607,7 +9606,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9694b6e68c94b24ea5d20a789d9c527, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gold: 1000
+  gold: 0
   goldUI: {fileID: 481072380}
 --- !u!1 &1948405957
 GameObject:

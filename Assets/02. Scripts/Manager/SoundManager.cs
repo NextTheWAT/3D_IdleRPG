@@ -1,30 +1,30 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
 
 /*
-// ¾÷±×·¹ÀÌµå ¼º°ø ½Ã
+// ì—…ê·¸ë ˆì´ë“œ ì„±ê³µ ì‹œ
 SoundManager.Instance.PlaySfx(SoundManager.SfxId.Upgrade);
 
-// Ä³³í ¹ß»ç
+// ìºë…¼ ë°œì‚¬
 SoundManager.Instance.PlaySfx(SoundManager.SfxId.CannonShot);
 
-// Æø¹ß
+// í­ë°œ
 SoundManager.Instance.PlaySfx(SoundManager.SfxId.Explosion);
 
-// Èú/½ºÇÉ¾îÅÃ
+// í/ìŠ¤í•€ì–´íƒ
 SoundManager.Instance.PlaySfx(SoundManager.SfxId.Healing);
 SoundManager.Instance.PlaySfx(SoundManager.SfxId.SpinAttack);
  */
 
 public class SoundManager : Singleton<SoundManager>
 {
-    [Header("Mixer (¼±ÅÃ)")]
+    [Header("Mixer (ì„ íƒ)")]
     [SerializeField] private AudioMixerGroup bgmGroup;
     [SerializeField] private AudioMixerGroup sfxGroup;
 
-    [Header("UI ½½¶óÀÌ´õ(¼±ÅÃ)")]
+    [Header("UI ìŠ¬ë¼ì´ë”(ì„ íƒ)")]
     [SerializeField] private Slider bgmSlider;
     [SerializeField] private Slider sfxSlider;
 
@@ -39,7 +39,7 @@ public class SoundManager : Singleton<SoundManager>
     [SerializeField] private AudioClip cannonShot;    // CannonShot.mp3
     [SerializeField] private AudioClip explosion;     // Explosion.mp3
 
-    [Header("SFX ¼³Á¤")]
+    [Header("SFX ì„¤ì •")]
     [SerializeField][Range(0f, 1f)] private float sfxVolume = 1f;
     [SerializeField][Range(0f, 0.5f)] private float pitchVariance = 0.05f;
     [SerializeField] private int sfxPoolSize = 10;
@@ -51,48 +51,65 @@ public class SoundManager : Singleton<SoundManager>
 
     private Dictionary<SfxId, AudioClip> sfxMap;
 
+    private bool _inited = false;
+
     void Awake()
     {
         DontDestroyOnLoad(gameObject);
-
-        // BGM ¼Ò½º
-        bgmSource = gameObject.AddComponent<AudioSource>();
-        bgmSource.playOnAwake = false;
-        bgmSource.loop = true;
-        bgmSource.outputAudioMixerGroup = bgmGroup;
-        bgmSource.volume = musicVolume;
-
-        // SFX Ç®
-        for (int i = 0; i < sfxPoolSize; i++)
-        {
-            var src = new GameObject($"SFX_{i}").AddComponent<AudioSource>();
-            src.transform.SetParent(transform);
-            src.playOnAwake = false;
-            src.loop = false;
-            src.outputAudioMixerGroup = sfxGroup;
-            src.spatialBlend = 0f; // 2D
-            sfxPool.Add(src);
-        }
-
-        // SFX ¸ÅÇÎ
-        sfxMap = new Dictionary<SfxId, AudioClip>
-        {
-            { SfxId.Healing,     healing   },
-            { SfxId.SpinAttack,  spinAttack},
-            { SfxId.Upgrade,     upgrade   },
-            { SfxId.CannonShot,  cannonShot},
-            { SfxId.Explosion,   explosion },
-        };
-
-        // ½½¶óÀÌ´õ ¿¬°á(¼±ÅÃ)
-        if (bgmSlider) bgmSlider.onValueChanged.AddListener(SetMusicVolume);
-        if (sfxSlider) sfxSlider.onValueChanged.AddListener(SetSfxVolume);
+        EnsureInit();
     }
 
     void Start()
     {
-        // ±âº» BGM Àç»ı
+        // ê¸°ë³¸ BGM ì¬ìƒ
         PlayBgm(backGround);
+    }
+
+    private void EnsureInit()
+    {
+        if (_inited) return;
+
+        if (bgmSource == null)
+        {
+            bgmSource = gameObject.AddComponent<AudioSource>();
+            bgmSource.playOnAwake = false;
+            bgmSource.loop = true;
+            bgmSource.outputAudioMixerGroup = bgmGroup;
+            bgmSource.volume = musicVolume;
+        }
+
+        if (sfxPool.Count == 0)
+        {
+            int count = Mathf.Max(1, sfxPoolSize);
+            for (int i = 0; i < count; i++)
+            {
+                var src = new GameObject($"SFX_{i}").AddComponent<AudioSource>();
+                src.transform.SetParent(transform);
+                src.playOnAwake = false;
+                src.loop = false;
+                src.outputAudioMixerGroup = sfxGroup;
+                src.spatialBlend = 0f; // 2D
+                sfxPool.Add(src);
+            }
+        }
+
+        if (sfxMap == null)
+        {
+            sfxMap = new Dictionary<SfxId, AudioClip>
+            {
+                { SfxId.Healing,     healing   },
+                { SfxId.SpinAttack,  spinAttack},
+                { SfxId.Upgrade,     upgrade   },
+                { SfxId.CannonShot,  cannonShot},
+                { SfxId.Explosion,   explosion },
+            };
+        }
+
+        // (ì„ íƒ) ìŠ¬ë¼ì´ë” ë¦¬ìŠ¤ë„ˆë„ ì—¬ê¸°ì„œ ë³´ì¥
+        if (bgmSlider) { bgmSlider.onValueChanged.RemoveListener(SetMusicVolume); bgmSlider.onValueChanged.AddListener(SetMusicVolume); }
+        if (sfxSlider) { sfxSlider.onValueChanged.RemoveListener(SetSfxVolume); sfxSlider.onValueChanged.AddListener(SetSfxVolume); }
+
+        _inited = true;
     }
 
     // ===================== BGM =====================
@@ -150,6 +167,7 @@ public class SoundManager : Singleton<SoundManager>
 
     public void PlaySfx(SfxId id, float volumeScale = 1f)
     {
+        EnsureInit();
         if (!sfxMap.TryGetValue(id, out var clip) || clip == null) return;
         var src = GetFreeSfxSource();
         src.pitch = 1f + Random.Range(-pitchVariance, pitchVariance);
@@ -164,14 +182,14 @@ public class SoundManager : Singleton<SoundManager>
         {
             if (!s.isPlaying) return s;
         }
-        // ¸ğµÎ Àç»ı ÁßÀÌ¸é Ã¹ ¹øÂ° ¼Ò½º Àç»ç¿ë
+        // ëª¨ë‘ ì¬ìƒ ì¤‘ì´ë©´ ì²« ë²ˆì§¸ ì†ŒìŠ¤ ì¬ì‚¬ìš©
         return sfxPool[0];
     }
 
     public void SetSfxVolume(float v)
     {
         sfxVolume = Mathf.Clamp01(v);
-        // Àç»ı ÁßÀÎ ¼Ò½ºµéµµ Áï½Ã ¹İ¿µ
+        // ì¬ìƒ ì¤‘ì¸ ì†ŒìŠ¤ë“¤ë„ ì¦‰ì‹œ ë°˜ì˜
         foreach (var s in sfxPool) s.volume = sfxVolume;
     }
 }
