@@ -174,29 +174,188 @@
 
 ---
 
-## 🧯 트러블슈팅
+## 🧯 Troubleshooting (Deep Dive)
 
-1) **UnityException: FindObjectsOfType는 생성자에서 호출 불가**  
-- **증상**: `UIConditionBinder` 등에서 필드 초기화/생성자 타이밍에 `Singleton.Instance` 접근 → 예외 발생.  
-- **해결**: `Awake/Start`에서 참조를 가져오고, 이벤트는 `OnEnable`에서 구독, `OnDisable`에서 해제.  
-- **팀 규칙**: “`Singleton.Instance`를 **필드 초기화에서 금지**”.
+> 단순 현상 나열이 아니라 **왜 문제가 생겼고** → **어떻게 고쳤으며** → **다시는 안 나오게 무엇을 규칙화했는지**를 적었습니다.
 
-2) **UnassignedReferenceException: PlayerManager.carTransform 미할당**  
-- **증상**: `RespawnManager`가 버튼에서 차 Transform을 참조하려는데 null.  
-- **해결**: `RespawnManager`에서 **자체 Resolve**(PlayerManager → 씬 검색 → car.transform 순) or 인스펙터에서 명시 할당.  
-- **보완**: Script Execution Order로 `PlayerManager.Awake`가 먼저 실행되도록 조정.
+### 1) `FindObjectsOfType`를 생성자/필드 초기화에서 호출
+**증상**  
+`UIConditionBinder`가 생성자 타이밍에 `Singleton.Instance`에 접근 → UnityException 발생.
 
-3) **이벤트 중복 구독으로 UI가 두 배로 갱신됨**  
-- **원인**: `OnEnable`에서 `AddListener`만 하고 `OnDisable`에서 `RemoveListener` 누락.  
-- **해결**: `OnDisable`에서 반드시 해제.
+**원인**  
+MonoBehaviour 생성자/필드 초기화 시점엔 씬 오브젝트가 완전히 준비되지 않았습니다.
 
-4) **빌보드 HP UI 떨림/뒤집힘**  
-- **원인**: 월드 스페이스 Canvas가 카메라를 정확히 바라보지 않음.  
-- **해결**: `LateUpdate`에서 `LookAt(camera.position, Vector3.up)` 또는 `Camera.main.transform.forward`를 정면으로 사용.
+**해결**  
+- `Awake/Start`에서 참조 획득, `OnEnable`에서 이벤트 구독, `OnDisable`에서 해제.
+- 인스펙터 할당 가능하면 `[SerializeField]`로 수동 바인딩.
 
-5) **WheelCollider 시각/물리 미스매치**  
-- **증상**: 바퀴 메시가 뜨거나 박힘.  
-- **해결**: `GetWorldPose`로 메시 위치/회전 동기화, `suspensionDistance`와 메시에 맞는 반지름/오프셋 재조정.
+**재발 방지**  
+- 팀 규칙: “**Singleton.Instance를 필드 초기화에서 호출 금지**”.  
+- 코드 리뷰 체크리스트에 추가.
+
+---
+
+### 2) `PlayerManager.carTransform` 미할당으로 Respawn 버튼 NRE
+**증상**  
+버튼 누를 때 `RespawnManager`가 `carTransform`에 접근하다 `UnassignedReferenceException`.
+
+**원인**  
+- `PlayerManager.Awake`가 아직 실행되지 않았거나, 인스펙터 미할당.  
+- 씬 전환/활성 순서에 따라 참조 타이밍이 뒤엉킴.
+
+**해결**  
+- `RespawnManager`에 `ResolveRefs()` 추가: PlayerManager → 씬 검색 → `car.transform` 순으로 **자체 복구**.  
+- Script Execution Order에서 `PlayerManager.Awake`가 먼저 돌도록 지정.
+
+**재발 방지**  
+- 싱글톤 참조는 **런타임에서 한 번 더 유효성 검사**.  
+- 중요한 참조는 인스펙터에 **명시 바인딩 우선**.
+
+---
+
+### 3) `SoundManager` NRE (UI에서 OnEnable 중 효과음 재생)
+**증상**  
+`UpgradePanelController.OnEnable()`에서 `PlaySfx()` 호출 시 NRE.
+
+**원인**  
+- 사운드 풀/오디오소스가 `SoundManager.Awake()` 이전이라 아직 준비 전.  
+- 또는 클립/슬라이더 미할당.
+
+**해결**  
+- UI 쪽에서 **지연 호출**(예: `Start`, `WaitForEndOfFrame`) 또는 `SoundManager.IsReady` 플래그/널가드.  
+- `SoundManager`는 `Awake()`에서 풀을 반드시 초기화.
+
+```csharp
+// UI 예시
+if (SoundManager.Instance && SoundManager.Instance.IsReady)
+    SoundManager.Instance.PlaySfx(SoundManager.SfxId.Upgrade);
+```
+
+**재발 방지**  
+- “UI의 OnEnable에서 오디오 바로 재생 금지” 가이드.  
+- 씬 부팅 순서(Execution Order) 문서화.
+
+---
+
+### 4) `BaseCondition`의 보호된 필드 접근(CS0122)
+**증상**  
+`EnemyHealthUI`에서 `BaseCondition.health`/`maxHealth` 접근 시 접근 제한자 에러.
+
+**원인**  
+캡슐화 위반. 외부 UI에서 내부 상태 필드를 직접 읽으려 함.
+
+**해결**  
+- **Public 프로퍼티/이벤트**로 접근(`Health`, `Health01` 등).  
+- 또는 상태 변경 이벤트를 구독해 슬라이더만 업데이트.
+
+**재발 방지**  
+- “UI는 **이벤트/프로퍼티만** 사용” 원칙 고지.
+
+---
+
+### 5) 빌보드 HP UI 떨림/뒤집힘
+**증상**  
+카메라가 빠르게 회전할 때 HP 슬라이더가 순간적으로 뒤집히거나 떨림.
+
+**원인**  
+- Update 순서/회전축 처리 부정확.  
+- 월드 스페이스 Canvas가 LookAt을 Z축까지 뒤집음.
+
+**해결**  
+- `LateUpdate`에서 카메라를 향하도록 처리.  
+- 필요 시 Y축만 회전(수평 빌보드).
+
+```csharp
+void LateUpdate() {
+    var cam = Camera.main.transform;
+    Vector3 dir = cam.position - transform.position; dir.y = 0f;
+    if (dir.sqrMagnitude > 0.0001f) transform.rotation = Quaternion.LookRotation(dir);
+}
+```
+
+**재발 방지**  
+- 모든 월드 스페이스 UI는 **LateUpdate**에서 방향/위치 갱신.
+
+---
+
+### 6) 투사체 임팩트 후 TrailRenderer/파티클 누수
+**증상**  
+충돌 직후 투사체 파괴 시 Trail/Impact VFX가 같이 사라지거나 씬에 고아 오브젝트로 남음.
+
+**원인**  
+Trail이 본체에 붙어 있어 함께 파괴되거나, 별도 라이프사이클이 없음.
+
+**해결**  
+- 충돌 시 Trail을 본체에서 **분리(detach)** → 수명 타이머로 제거.  
+- Impact VFX는 **풀링** 또는 `Destroy(go, duration)`로 정리.
+
+**재발 방지**  
+- ‘투사체 본체/트레일/임팩트’를 **분리된 오브젝트**로 관리.
+
+---
+
+### 7) NavMesh 스폰 지점이 바깥/벽 내부로 샘플링
+**증상**  
+적이 벽 안/경계 밖에서 스폰되거나 즉시 추락.
+
+**원인**  
+`NavMesh.SamplePosition` 반경이 너무 작거나, 허용 에어리어 마스크가 누락.
+
+**해결**  
+- 스폰 후보 지점에서 `SamplePosition(point, out hit, radius, areaMask)`로 **여유 반경**을 주고 샘플.  
+- `allowedAreaNames`로 레이어링/마스크를 명시.
+
+**재발 방지**  
+- 스폰 영역을 **BoxCollider/Gizmo**로 시각화하고, 반경/마스크를 프리셋화.
+
+---
+
+### 8) WheelCollider 시각/물리 불일치(튀거나 박힘)
+**증상**  
+빠른 속도/경사에서 바퀴 메시가 떠 보이거나 섀시가 튀는 현상.
+
+**원인**  
+- 메시 위치를 Update에서 갱신.  
+- Rigidbody 보간/고정 타임스텝 불일치.
+
+**해결**  
+- **FixedUpdate**에서 `wheelCollider.GetWorldPose(out pos, out rot)`로 메시 동기화.  
+- Rigidbody Interpolate 사용, Fixed Timestep 점검(0.02s 권장).
+
+**재발 방지**  
+- 차량 비주얼은 **항상 FixedUpdate**에서 동기화.
+
+---
+
+### 9) 이벤트 중복 구독으로 UI 두 배 갱신
+**증상**  
+씬 재로드/패널 토글 이후 HP/골드 텍스트가 중복 업데이트.
+
+**원인**  
+`OnEnable`에서 `AddListener`만 하고 `OnDisable`에서 `RemoveListener` 누락.
+
+**해결**  
+- 모든 구독은 **OnEnable ↔ OnDisable** 페어로 관리.  
+- 구독 전 `RemoveListener`로 한번 청소하는 방어 코드도 허용.
+
+**재발 방지**  
+- 리뷰 체크리스트: “이벤트 구독은 반드시 해제했나?”.
+
+---
+
+### 10) Stage 타이머 드리프트/폭주
+**증상**  
+일정 시간 후 Stage가 너무 빨리 오르거나 UI가 밀림.
+
+**원인**  
+`Time.time` 기반 반복에서 씬 일시정지/프레임 드랍에 영향, 또는 중복 코루틴 실행.
+
+**해결**  
+- **단일 코루틴 가드**(isRunning 플래그) + `yield return new WaitForSeconds(…)` 사용.  
+- 일시정지 대응이 필요하면 `Time.unscaledDeltaTime`로 별도 누적.
+
+**재발 방지**  
+- 모든 루프/타이머에 **중복 실행 가드**와 “정지/재개” 시나리오 점검.
 
 ---
 
