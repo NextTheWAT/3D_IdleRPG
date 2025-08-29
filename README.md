@@ -13,6 +13,7 @@
 ---
 
 ## 🖼️ 플레이영상&GIF
+![Animation (1)](https://github.com/user-attachments/assets/14b433c7-ded1-4470-af88-10040b8de8d0)
 
 
 
