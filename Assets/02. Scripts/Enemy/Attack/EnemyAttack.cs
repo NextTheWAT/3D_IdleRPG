@@ -16,6 +16,9 @@ public class EnemyAttack : MonoBehaviour
     [SerializeField] private bool applyKnockback = false;
     [SerializeField] private float knockbackForce = 5f;    // VelocityChange ±‚¡ÿ
 
+    [Header("VFX (optional)")]
+    [SerializeField] private GameObject attackparticle;
+
     [Header("Enemy")]
     [SerializeField] private GameObject enemyGameObject;
 
@@ -38,6 +41,9 @@ public class EnemyAttack : MonoBehaviour
                                                    : (other.transform.root ? other.transform.root : other.transform);
 
         var dmg = target.GetComponent<IDamageable>();
+        AttackParticle(target);
+
+
         enemyCondition.DeathParticle();
         if (dmg == null) return;
 
@@ -56,5 +62,16 @@ public class EnemyAttack : MonoBehaviour
             }
         }
         Destroy(enemyGameObject, 0.1f);
+    }
+
+    public void AttackParticle(Transform transform)
+    {
+        if (attackparticle != null)
+        {
+            var vfx = Instantiate(attackparticle, transform.position, transform.rotation);
+            var ps = vfx.GetComponent<ParticleSystem>();
+            if (ps == null || ps.main.stopAction != ParticleSystemStopAction.Destroy)
+                Destroy(vfx, 1f);
+        }
     }
 }

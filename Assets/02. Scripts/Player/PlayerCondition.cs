@@ -29,7 +29,13 @@ public class PlayerCondition : BaseCondition, IDamageable
     private void NotifyMana() => onManaChanged?.Invoke(mana, Mana01);
     private void NotifyExp() => onExpChanged?.Invoke(exp, Exp01);
 
-
+    protected override void Awake()
+    {
+        base.Awake(); // BaseCondition: HP 초기 알림 호출
+        // 초기 상태도 UI에 즉시 반영
+        NotifyMana();
+        NotifyExp();
+    }
 
 
     // --- 외부에서 쓰는 간단 API ---
@@ -77,24 +83,20 @@ public class PlayerCondition : BaseCondition, IDamageable
         level++;
         onLeveledUp?.Invoke(level);
 
-        // 레벨업 보너스(예시)
+        // 레벨업 보너스
         maxMana += 5f;
         mana = maxMana;
-        // 다음 레벨 필요치(예시: 점진 증가)
+
+        maxHealth += 10f;
+        health = maxHealth;
+        // 다음 레벨 필요치(점진 증가)
         expToNext = Mathf.Round(expToNext * 1.15f);
 
         // 레벨업 시 체력/마나 갱신 알림
         NotifyMana();
         NotifyExp();
         NotifyHealth(); // BaseCondition의 HP 알림(초기화/변경 직후 호출과 동일)
-    }
 
-    protected override void Awake()
-    {
-        base.Awake(); // BaseCondition: HP 초기 알림 호출
-        // 초기 상태도 UI에 즉시 반영
-        NotifyMana();
-        NotifyExp();
     }
 
     protected override void Die()

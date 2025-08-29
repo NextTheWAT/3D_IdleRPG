@@ -452,5 +452,54 @@ public class CarAI : MonoBehaviour
             (-p0 + 3f * p1 - 3f * p2 + p3) * t3
         );
     }
+    public void TeleportToNode(int nodeIndex, bool alignForward = true, bool snapToNavMesh = true, float yOffset = 0.2f)
+    {
+        if (trackNodes == null || trackNodes.Count == 0) return;
+
+        nodeIndex = Mathf.Clamp(nodeIndex, 0, trackNodes.Count - 1);
+        Transform node = trackNodes[nodeIndex];
+        if (!node) return;
+
+        // 목적 위치
+        Vector3 p = node.position;
+
+        // NavMesh에 살짝 스냅(길 밖일 때 안전)
+        if (snapToNavMesh && UnityEngine.AI.NavMesh.SamplePosition(p, out var hit, 2f, UnityEngine.AI.NavMesh.AllAreas))
+            p = hit.position;
+
+        // 바라볼 방향: 현재 노드 → 다음 노드 (수평)
+        Quaternion rot = transform.rotation;
+        if (alignForward)
+        {
+            int next = loopTrack ? (nodeIndex + 1) % trackNodes.Count : Mathf.Min(nodeIndex + 1, trackNodes.Count - 1);
+            Vector3 dir = (trackNodes[next].position - node.position);
+            dir.y = 0f;
+            if (dir.sqrMagnitude > 0.0001f) rot = Quaternion.LookRotation(dir.normalized, Vector3.up);
+        }
+
+        // 리지드바디 정지 + 순간이동
+        if (!rb) rb = GetComponent<Rigidbody>();
+        if (rb)
+        {
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.position = p + Vector3.up * yOffset;
+            rb.rotation = rot;
+        }
+        else
+        {
+            transform.SetPositionAndRotation(p + Vector3.up * yOffset, rot);
+        }
+
+        // 경로/진행 상태 리셋
+        waypoints.Clear();
+        currentWayPoint = 0;
+        allowMovement = true;
+
+        // 다음 세그먼트 즉시 생성되도록 인덱스 동기화 후 한 구간 생성
+        trackNodeIndex = nodeIndex;
+        TrackPath(); // private 메서드지만 같은 클래스라 호출 가능
+    }
+
 
 }

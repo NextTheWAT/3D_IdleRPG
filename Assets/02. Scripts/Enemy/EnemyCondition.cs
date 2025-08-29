@@ -2,10 +2,6 @@ using UnityEngine;
 
 public class EnemyCondition : BaseCondition, IDamageable
 {
-    [Header("VFX (optional)")]
-    [SerializeField] private GameObject deathVfxPrefab;   // 사망 이펙트
-    [SerializeField] private float deathVfxLifetime = 2f; // 파티클에 Destroy 설정이 없을 때만 사용
-
     [Header("References")]
     [SerializeField] private EnemyAI enemyAI;             // 이동 담당
 
@@ -15,7 +11,6 @@ public class EnemyCondition : BaseCondition, IDamageable
     [Header("Stage Scaling (Absolute)")]
     [SerializeField] private float baseMaxHealthCache = -1f; // 스폰 기준 체력
 
-    private bool isDead = false;
 
     protected override void Awake()
     {
@@ -36,13 +31,11 @@ public class EnemyCondition : BaseCondition, IDamageable
     protected override void Die()
     {
         base.Die();
-        if (isDead) return;   // 재진입 가드
-        isDead = true;
 
         // 이동/히트박스 비활성(있을 때)
         if (enemyAI != null) enemyAI.DisableAgent();
 
-        DeathParticle();
+        PlayerManager.Instance.playerCondition.AddExp(10); // 경험치 획득(고정치, 추후 조정 가능)
 
         // 보상 지급(Null 안전)
         if (CurrencyManager.Instance != null)
@@ -52,17 +45,6 @@ public class EnemyCondition : BaseCondition, IDamageable
         Destroy(gameObject, 0.1f);
     }
 
-    public void DeathParticle()
-    {
-        // 사망 VFX (1회)
-        if (deathVfxPrefab != null)
-        {
-            var vfx = Instantiate(deathVfxPrefab, transform.position, transform.rotation);
-            var ps = vfx.GetComponent<ParticleSystem>();
-            if (ps == null || ps.main.stopAction != ParticleSystemStopAction.Destroy)
-                Destroy(vfx, deathVfxLifetime);
-        }
-    }
 
     // ====== Stage 연동 훅 ======
     // EnemyManager.StageHealthMod 를 SendMessage/직접 호출로 받는 형태

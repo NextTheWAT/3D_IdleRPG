@@ -68,19 +68,6 @@ public class EnemyAI : MonoBehaviour
         agent.updateRotation = updateRotation;
     }
 
-    // ===== Public APIs =====
-    public void SetPlayer(Transform t)
-    {
-        player = t;
-        if (agent != null && agent.enabled && agent.isOnNavMesh && player != null)
-            agent.SetDestination(player.position);
-    }
-
-    public void SetMoveParams(float speed, float angular, float accel)
-    {
-        moveSpeed = speed; angularSpeed = angular; acceleration = accel;
-        if (agent != null) ApplyAgentParams();
-    }
 
     /// <summary>사망 시 호출: 에이전트 즉시 정지/비활성화</summary>
     public void DisableAgent()

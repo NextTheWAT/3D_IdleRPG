@@ -13,14 +13,18 @@ public abstract class BaseCondition : MonoBehaviour
     [SerializeField] protected float minHealth = 0f;     // 최소 체력 (보통 0)
     [SerializeField] protected float maxHealth = 100f;   // 최대 체력
 
+    [Header("VFX (optional)")]
+    [SerializeField] private GameObject deathVfxPrefab;   // 사망 이펙트
+    [SerializeField] private float deathVfxLifetime = 2f; // 파티클에 Destroy 설정이 없을 때만 사용
+
+    private bool isDead = false;
+
     public float GetHealth() => health;
     public float GetMaxHealth() => maxHealth;
 
     [Header("Events")]
     // 체력 변화 시 호출되는 이벤트: (현재 체력 값, 정규화된 체력 0~1)
     public UnityEvent<float, float> onHealthChanged;
-    // 사망 시 호출되는 이벤트
-    public UnityEvent onDied;
 
     /// <summary>
     /// 현재 체력 값 (읽기 전용)
@@ -74,9 +78,22 @@ public abstract class BaseCondition : MonoBehaviour
     /// </summary>
     protected virtual void Die()
     {
+        if (isDead) return;   // 재진입 가드
+        isDead = true;
+
         SoundManager.Instance.PlaySfx(SoundManager.SfxId.Explosion);
-        onDied?.Invoke();
-        // e.g. 플레이어: 게임 오버 처리 / 몬스터: 파괴 이펙트 등
+        DeathParticle();
+    }
+    public void DeathParticle()
+    {
+        // 사망 VFX (1회)
+        if (deathVfxPrefab != null)
+        {
+            var vfx = Instantiate(deathVfxPrefab, transform.position, transform.rotation);
+            var ps = vfx.GetComponent<ParticleSystem>();
+            if (ps == null || ps.main.stopAction != ParticleSystemStopAction.Destroy)
+                Destroy(vfx, deathVfxLifetime);
+        }
     }
 
 }

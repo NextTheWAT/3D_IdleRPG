@@ -55,19 +55,6 @@ public abstract class BaseWeapon : MonoBehaviour
         runtimeDamage = data.damage + (Mathf.Max(1, currentLevel) - 1) * per;
     }
 
-    //private void TrimFirePointsByData()
-    //{
-    //    if (data != null && firePoints != null && data.maxFirePoints > 0)
-    //    {
-    //        int allowed = Mathf.Min(data.maxFirePoints, firePoints.Length);
-    //        if (allowed != firePoints.Length)
-    //        {
-    //            var trimmed = new Transform[allowed];
-    //            for (int i = 0; i < allowed; i++) trimmed[i] = firePoints[i];
-    //            firePoints = trimmed;
-    //        }
-    //    }
-    //}
 
     protected virtual void Update()
     {
@@ -155,5 +142,4 @@ public abstract class BaseWeapon : MonoBehaviour
     }
 
     protected abstract void OnFire(Transform target);
-    public WeaponData Data => data;
 }

@@ -4,9 +4,6 @@ using TMPro;
 
 public class UIConditionBinder : MonoBehaviour
 {
-    [Header("Refs")]
-    [SerializeField] private PlayerCondition player;
-
     [Header("HP UI")]
     [SerializeField] private Slider hpBar;
     [SerializeField] private TMP_Text hpText;
@@ -19,28 +16,33 @@ public class UIConditionBinder : MonoBehaviour
     [SerializeField] private Slider expBar;
     [SerializeField] private TMP_Text expText;
 
+    [Header("Level UI")]
+    [SerializeField] private TMP_Text levelText;
+
+    private PlayerCondition player;
+
+    private void Awake()
+    {
+        // PlayerManager가 이미 떠 있으면 우선 사용
+        if (PlayerManager.Instance != null)
+            player = PlayerManager.Instance.playerCondition;
+    }
+
     private void OnEnable()
     {
-        Debug.Log("UIConditionBinder OnEnable");
-        player = player ? player : FindObjectOfType<PlayerCondition>();
-
         if (!player) return;
 
-        // BaseCondition(HP) 이벤트 이름/시그니처는 프로젝트에 맞게 조정
-        // 가정: BaseCondition에 onHealthChanged(float current, float normalized01)가 존재
+        // 중복 구독 방지 위해 Enable 시 구독
         player.onHealthChanged.AddListener(OnHpChanged);
-
         player.onManaChanged.AddListener(OnMpChanged);
         player.onExpChanged.AddListener(OnExpChanged);
+        player.onLeveledUp.AddListener(OnLevelChanged);
 
-        // 초기값 보정(플레이 중 AddListener 뒤에도 바로 화면 최신화)
-        // BaseCondition은 Awake에서 NotifyHealth()를 이미 수행하므로,
-        // 여기서는 강제 갱신이 필요 없을 수 있지만 안전하게 한 번 더 받도록 설계.
-        // => 이벤트 기반이므로 실제 초기 알림은 PlayerCondition.Awake/Notify*에서 이미 한 번 나감
-
+        // 초기값 즉시 반영
         OnHpChanged(player.Health, player.Health01);
         OnMpChanged(player.Mana, player.Mana01);
         OnExpChanged(player.Exp, player.Exp01);
+        OnLevelChanged(player.Level);
     }
 
     private void OnHpChanged(float current, float normalized01)
@@ -61,4 +63,13 @@ public class UIConditionBinder : MonoBehaviour
         if (expBar) expBar.value = normalized01;
         if (expText) expText.text = Mathf.RoundToInt(current).ToString();
     }
+
+    private void OnLevelChanged(int level)
+    {
+        if (levelText && player)
+        {
+            levelText.text = $"Lv. {player.Level}";
+        }
+    }
+
 }
